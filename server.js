@@ -9,7 +9,7 @@ app.get('/', (req, res) => res.send('Hello World!'));
 const server = app.listen(APP_PORT, () => console.log('Listening on APP_PORT ' + APP_PORT));
 //---------------------------------------------------------------------------
 
-mongoose.connect('mongodb://localhost/test');
+mongoose.connect('mongodb://127.0.0.1/test');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => { console.log('DB connected!')});
@@ -29,7 +29,7 @@ var Kitten = mongoose.model('Kitten', kittySchema);
 var silence = new Kitten({ Catname: 'Silence' });
 var witness = new Kitten({ Catname: 'Witness' });
 var fluffy = new Kitten({ Catname : 'Fluffy' });
-Kitten.save();
+//Kitten.save();
 Kitten.find({}, function (err, kittens) {
     if (err) return console.error(err);
     console.log(kittens);
