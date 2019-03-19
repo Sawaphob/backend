@@ -8,7 +8,6 @@ const Group = require('./models/group');
 const JoinedGroupInfo = require('./models/groupjoinedinfo');
 const Message = require('./models/message');
 
-
 // DB ---------------------------------------------------------------------------
 mongoose.connect('mongodb://localhost/test'); // test =  database name
 var db = mongoose.connection;
