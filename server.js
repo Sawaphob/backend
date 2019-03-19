@@ -1,36 +1,31 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const User = require('./models/user');
+const Group = require('./models/group');
+const JoinedGroupInfo = require('./models/groupjoinedinfo');
+const Message = require('./models/message');
+
 const APP_PORT = 4000;
 
-const app = express();
-
-app.get('/', (req, res) => res.send('Hello World!'));
-
-const server = app.listen(APP_PORT, () => console.log('Listening on APP_PORT ' + APP_PORT));
-//---------------------------------------------------------------------------
-
-mongoose.connect('mongodb://localhost/test');
+// DB ---------------------------------------------------------------------------
+mongoose.connect('mongodb://localhost/test'); // test =  database name
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => { console.log('DB connected!')});
+//--------------------------------------
+var aUser = new User({ name: 'userNameKub' });
+aUser.save();
+var aGroup = new Group({ name: 'Group101kub' });
+var aUser2 = new User({ name: 'user2NameKub' });
 
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-
-var kittySchema = new mongoose.Schema({
-  Catname: String,
-  color: String
-});/* 
-kittySchema.methods.speak = function () {
-    var greeting = this.Catname ? "Meow name is " + this.Catname : "I don't have a name";
-    console.log(greeting);
-  }   */
-var Kitten = mongoose.model('Kitten', kittySchema);
-var silence = new Kitten({ Catname: 'Silence' });
-var witness = new Kitten({ Catname: 'Witness' });
-var fluffy = new Kitten({ Catname : 'Fluffy' });
-Kitten.save();
-Kitten.find({}, function (err, kittens) {
+var app = express();
+var server = app.listen(APP_PORT, () => console.log('Listening on APP_PORT ' + APP_PORT));
+app.get('/', (req, res) => {
+  User.find({}, function (err, users) {
     if (err) return console.error(err);
-    console.log(kittens);
+    console.log(users);
+    res.send(users); // for go to localhost:4000 and see data in browser
   })
+})
