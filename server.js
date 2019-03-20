@@ -1,7 +1,7 @@
 // const express = require('express');
-const APP_PORT = 4000;
+const APP_PORT = 8000;
 const io = require('socket.io').listen(APP_PORT);
-
+console.log('listening on port ', APP_PORT);
 const mongoose = require('mongoose');
 const User = require('./models/user');
 const Group = require('./models/group');
@@ -9,7 +9,7 @@ const JoinedGroupInfo = require('./models/groupjoinedinfo');
 const Message = require('./models/message');
 
 // DB ---------------------------------------------------------------------------
-mongoose.connect('mongodb://localhost/test'); // test =  database name
+mongoose.connect('mongodb://localhost/test',{ useNewUrlParser: true }); // test =  database name
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => { console.log('DB connected!')});
@@ -17,6 +17,8 @@ db.once('open', () => { console.log('DB connected!')});
 var aUser = new User({ name: 'userNameKub' });
 var aGroup = new Group({ name: 'Group101kub' });
 var aUser2 = new User({ name: 'user2NameKub' });
+var stamp = new Date('December 17, 1995 03:24:00');
+
 //-----------------------------------------------------------------------------
 
 function userEnter(data) {
@@ -24,40 +26,40 @@ function userEnter(data) {
 
 }
 
-function GetAndSendAllChats() {
+function GetAllChats() {
   // TODO [DB] : Get All chats and send back
   var allChats = { /* QUERYed */
-    "Group1" : [
+    "Group1isBack" : [
       {
         username: "This",
-        content: <p>This</p>,
+        content: "content = kuy",
         timeStamp: "1:23"
       },
       {
         username: "is",
-        content: <p>is</p>,
+        content: "is",
         timeStamp: "2:34"
       },
       {
         username: "Group1",
-        content: <p>group1</p>,
+        content: "group1",
         timeStamp: "3.45"
       },
     ],
-    "Group2" : [
+    "Group2woy" : [
       {
         username: "This",
-        content: <p>This</p>,
+        content: "This",
         timeStamp: "1:23"
       },
       {
         username: "is",
-        content: <p>is</p>,
+        content: "is",
         timeStamp: "2:34"
       }
     ]
   }
-  socket.emit('Allchat',allChats); 
+  return allChats; 
 }
 
 function storeMessage(message) {
@@ -72,13 +74,18 @@ io.on('connection', function (socket) {
     console.log('Received [enter] event!');
     console.log(data);  
     userEnter(data);
-    GetAndSendAllChats();
+    socket.emit('allchat',GetAllChats());
+    console.log('sendallChat lew!')
   });
   
   socket.on('sendMessage', function(data){
-    console.log('Received [enter] event!');
+    console.log('Received [sendMessage] event!');
     console.log(data);
-    var dummyMessage = {}
+    var dummyMessage = {        
+      username: "This",
+      content: "This",
+      timeStamp: "1:23"
+    }
     storeMessage();
     socket.emit('updateSendMessages',function(datakub) {
       /* Send Messages to others in chat */
@@ -90,5 +97,7 @@ io.on('connection', function (socket) {
   socket.on('disconnect', function () {
     io.emit('a user disconnected');
   });
+
 });
 
+//-------------------------
