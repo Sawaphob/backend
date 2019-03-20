@@ -63,11 +63,11 @@ function GetAllChats() {
 }
 
 function storeMessage(message) {
-  // TODO [DB] : Store message in DB !
+	// TODO [DB] : Store message in DB !
 }
 
 io.on('connection', function (socket) {
-  io.emit('this', { will: 'be received by everyone'});
+	io.emit('this', { will: 'be received by everyone'});
 
   // After click enter button , data = username 
   socket.on('enter', function (data) {
@@ -91,11 +91,58 @@ io.on('connection', function (socket) {
       /* Send Messages to others in chat */
       /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
       // see more -- broadcast , but tun: think wa mai na ja work
-    });
+  });
   })
 
+  function joinGroup(socket, db, groupId) {
+  	if (!groupId) {
+  		socket.emit('errUnknownGroup');
+  	} else{
+  		//[TODO DB INSERT USER TO GROUP]
+        socket.join(groupId);
+      }
+  }
+
+  socket.on('joinGroup', (data) => {
+    if (data.groupId) { //Id from each group
+    	joinGroup(socket, db, data.groupId);
+      /* แปะเผื่อไว้ก่อนต้องใช้
+      refreshGroups(socket, db, false); 
+      refreshMembers(socket, db, data.gid, true);
+      */
+  } else {
+  	socket.emit('errUnknownGroup');
+  }
+})
+
+  socket.on('leaveGroup', (data) => {
+
+  	if (!data.groupId) {
+  		socket.emit('errUnknownGroup');
+  	} else {
+    //[TODO DB Delete user from group]
+
+	/* แปะเผื่อไว้ก่อนต้องใช้
+      refreshGroups(socket, db, false); 
+      refreshMembers(socket, db, data.gid, true);
+      */
+
+  }
+})
+  socket.on('createGroup', (data) => {
+  	//[TODO DB INSERT NEW GROUP]
+        joinGroup(socket, db, groupId);
+
+        /* แปะเผื่อไว้ก่อนต้องใช้
+      refreshGroups(socket, db, false); 
+      refreshMembers(socket, db, data.gid, true);
+      */
+      })
+    
+
+
   socket.on('disconnect', function () {
-    io.emit('a user disconnected');
+  	io.emit('a user disconnected');
   });
 
 });
