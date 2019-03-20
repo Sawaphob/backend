@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const MessageSchema = new Schema({
-    userID:  Schema.ObjectId,
-    groupID:  Schema.ObjectId,
+    userName:  String,
+    groupName:  String,
     timestamp: Date,
     text: String,
 });
