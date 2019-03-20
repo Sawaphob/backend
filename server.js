@@ -9,7 +9,7 @@ const JoinedGroupInfo = require('./models/groupjoinedinfo');
 const Message = require('./models/message');
 
 // DB ---------------------------------------------------------------------------
-mongoose.connect('mongodb://localhost/test',{ useNewUrlParser: true }); // test =  database name
+mongoose.connect('mongodb://127.0.0.1/test',{ useNewUrlParser: true }); // test =  database name
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => { console.log('DB connected!')});
@@ -25,7 +25,7 @@ function userEnter(data) { //data = {username : "Dongglue"}
   User.find({name:data.username},function(err,users){
     if(err) {console.log(err);}
     // TODO [DB] : Create user if not existed
-    if(!users) { // user == [] อันนี้เขียนๆไปก่อน ไม่รู้ js เช๊คไง
+    if(!users || !users.length) { //แก้แบ้วเรียบร้อย by pun
       var newUser = new User({name:data.username});
       newUser.save();
     }
