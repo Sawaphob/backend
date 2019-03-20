@@ -32,8 +32,17 @@ function userEnter(data) { //data = {username : "Dongglue"}
   })
 }
 
-function GetAllChats() {
+function GetAllChats(data) { //data = {groupName:"3L"}
   // TODO [DB] : Get All chats and send back
+  Message.find({groupName:data.groupName}).sort("timeStamp").select("text").exec(function(err,message){
+    if(err) {console.log(err);}
+  	if(!message || !message.length) {
+      return message;
+    }else{
+    	console.log("Error in query all message in group");
+    }
+})
+
   var allChats = { /* QUERYed */
     "Group1isBack" : [
       {
@@ -68,7 +77,10 @@ function GetAllChats() {
   return allChats; 
 }
 
-function storeMessage(message) {
+function storeMessage(data) { //data = {userName:"tstkub",groupName:"3L",timestamp:blabla,text:"Hello World"}
+	var newMessage = new Message({userName:data.userName,groupName:data.groupName,timestamp:data.timestamp,text:data.text});
+	console.log(newMessage);
+	newMessage.save();
 	// TODO [DB] : Store message in DB !
 }
 
