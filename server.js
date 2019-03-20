@@ -21,7 +21,12 @@ var stamp = new Date('December 17, 1995 03:24:00');
 
 //-----------------------------------------------------------------------------
 
-function userEnter(data) {
+function userEnter(data) { //data = {username = "Dongglue"}
+  User.find({name:data.username},function(err)){
+    if(err){
+      var newUser = new User({name:data.username});
+      newUser.save();
+    }
   // TODO [DB] : Create user if not existed
 
 }
@@ -93,54 +98,21 @@ io.on('connection', function (socket) {
       // see more -- broadcast , but tun: think wa mai na ja work
   });
   })
-
-  function joinGroup(socket, db, groupId) {
-  	if (!groupId) {
-  		socket.emit('errUnknownGroup');
-  	} else{
-  		//[TODO DB INSERT USER TO GROUP]
-        socket.join(groupId);
-      }
-  }
-
-  socket.on('joinGroup', (data) => {
-    if (data.groupId) { //Id from each group
-    	joinGroup(socket, db, data.groupId);
-      /* แปะเผื่อไว้ก่อนต้องใช้
-      refreshGroups(socket, db, false); 
-      refreshMembers(socket, db, data.gid, true);
-      */
-  } else {
-  	socket.emit('errUnknownGroup');
-  }
-})
-
-  socket.on('leaveGroup', (data) => {
-
-  	if (!data.groupId) {
-  		socket.emit('errUnknownGroup');
-  	} else {
-    //[TODO DB Delete user from group]
-
-	/* แปะเผื่อไว้ก่อนต้องใช้
-      refreshGroups(socket, db, false); 
-      refreshMembers(socket, db, data.gid, true);
-      */
-
-  }
-})
-  socket.on('createGroup', (data) => {
-  	//[TODO DB INSERT NEW GROUP]
-        joinGroup(socket, db, groupId);
-
-        /* แปะเผื่อไว้ก่อนต้องใช้
-      refreshGroups(socket, db, false); 
-      refreshMembers(socket, db, data.gid, true);
-      */
-      })
+  socket.on('joinGroup', function(data)){ //data = {username:'dongglue',groupname:'3L'}
+      var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
+      console.log(joinNewGroup);
+      newGroupJoin.save()
+    }
+  socket.on('leaveGroup', function(data)){//data = {username:'dongglue',groupname:'3L'}
+      JoinedGroupInfo.deleteOne(data);
+    }
+  
+  socket.on('createGroup', function(data)){ //data = {username:'dongglue',groupname:'3L'}
+  	   var newGroupJoin = new JoinedGroupInfo({username:data.username,groupname:data.groupname});
+       console.log(newGroupJoin);
+       newGroupJoin.save();
+    }
     
-
-
   socket.on('disconnect', function () {
   	io.emit('a user disconnected');
   });
