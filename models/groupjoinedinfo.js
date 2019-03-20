@@ -1,9 +1,7 @@
 var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const GroupJoinedInfoSchema = new Schema({
-    userID:  Schema.ObjectId,
-    groupID:  Schema.ObjectId,
-    lastRead: Number,
-    isExit: Boolean
+    username:  String,
+    groupname:  String,
 });
 module.exports = GroupJoinedInfo = mongoose.model('GroupJoinedInfo', GroupJoinedInfoSchema);
