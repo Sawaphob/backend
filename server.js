@@ -21,14 +21,12 @@ var stamp = new Date('December 17, 1995 03:24:00');
 
 //-----------------------------------------------------------------------------
 
-function userEnter(data) { //data = {username = "Dongglue"}
-  User.find({name:data.username},function(err)){
-    if(err){
-      var newUser = new User({name:data.username});
-      newUser.save();
-    }
-  // TODO [DB] : Create user if not existed
-
+function userEnter(data) { //data = {username : "Dongglue"}
+  User.find({name:data.username},function(err,users){
+    if(err) {console.log(err);}
+    // TODO [DB] : Create user if not existed
+    
+  })
 }
 
 function GetAllChats() {
@@ -72,8 +70,8 @@ function storeMessage(message) {
 }
 
 io.on('connection', function (socket) {
-	io.emit('this', { will: 'be received by everyone'});
-
+  console.log('a user connected');
+  
   // After click enter button , data = username 
   socket.on('enter', function (data) {
     console.log('Received [enter] event!');
@@ -91,27 +89,31 @@ io.on('connection', function (socket) {
       content: "This",
       timeStamp: "1:23"
     }
-    storeMessage();
+    storeMessage(message); // อาจจะเขียนเป็น new Message แล้ว newMessage.save() ไปเลย ไม่ต้องแยก function เพราะ function ข้างนอกมองไม่เห็น socket
     socket.emit('updateSendMessages',function(datakub) {
       /* Send Messages to others in chat */
       /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
       // see more -- broadcast , but tun: think wa mai na ja work
   });
   })
-  socket.on('joinGroup', function(data)){ //data = {username:'dongglue',groupname:'3L'}
+  socket.on('joinGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
       var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
       console.log(joinNewGroup);
       newGroupJoin.save()
-    }
-  socket.on('leaveGroup', function(data)){//data = {username:'dongglue',groupname:'3L'}
+      // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
+    })
+    
+  socket.on('leaveGroup', function(data){//data = {username:'dongglue',groupname:'3L'}
       JoinedGroupInfo.deleteOne(data);
-    }
+      // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
+    })
   
-  socket.on('createGroup', function(data)){ //data = {username:'dongglue',groupname:'3L'}
+  socket.on('createGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
   	   var newGroupJoin = new JoinedGroupInfo({username:data.username,groupname:data.groupname});
        console.log(newGroupJoin);
        newGroupJoin.save();
-    }
+      // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
+  })
     
   socket.on('disconnect', function () {
   	io.emit('a user disconnected');
