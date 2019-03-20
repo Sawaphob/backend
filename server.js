@@ -25,7 +25,10 @@ function userEnter(data) { //data = {username : "Dongglue"}
   User.find({name:data.username},function(err,users){
     if(err) {console.log(err);}
     // TODO [DB] : Create user if not existed
-    
+    if(!users) { // user == [] อันนี้เขียนๆไปก่อน ไม่รู้ js เช๊คไง
+      var newUser = new User({name:data.username});
+      newUser.save();
+    }
   })
 }
 
