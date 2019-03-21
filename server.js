@@ -9,7 +9,7 @@ const JoinedGroupInfo = require('./models/groupjoinedinfo');
 const Message = require('./models/message');
 
 // DB ---------------------------------------------------------------------------
-mongoose.connect('mongodb://localhost/LLL',{ useNewUrlParser: true }); // test =  database name
+mongoose.connect('mongodb://localhost/test',{ useNewUrlParser: true }); // test =  database name
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => { console.log('DB connected!')});
@@ -87,7 +87,6 @@ function GetGroupInfo(username){
     var isJoinGroupListkub = [];
     let j = 0;      
     groupListkub.forEach(function(element){
-      j += 1; 
       JoinedGroupInfo.find({username:username,groupname:element},function(err,data){
         if (data.length == 0) {
           isJoinGroupListkub.push(false);
@@ -95,67 +94,32 @@ function GetGroupInfo(username){
           isJoinGroupListkub.push(true);
         }
         console.log('2.5')
+        
+        j += 1; 
         console.log(j)
         console.log(groupListkub.length)
         console.log({groupList:groupListkub, isJoinGroupList:isJoinGroupListkub});
       })
     })
-//--------------------------------------
-
-//-------------------
-// var aUser = new User({ name: 'userNameKub' });
-// var aGroup = new Group({ name: 'Group101kub' });
-// var aUser2 = new User({ name: 'user2NameKub' });
-// var stamp = new Date('December 17, 1995 03:24:00');
-// aUser.save()
-// User.find({}, function(users) {
-//   console.log(users)
-
-function userEnter(data) { //data = {username : "Dongglue"}
-  User.find({name:data.username},function(err,users){
-    if(err) {console.log(err);}
-    // TODO [DB] : Create user if not existed
-    if(!users || !users.length) { //แก้แบ้วเรียบร้อย by pun
-      var newUser = new User({name:data.username});
-      newUser.save();
-    }
   })
 
 }
 GetGroupInfo('user1');
 
-function storeMessage(data) { //data = {userName:"tstkub",groupName:"3L",timestamp:blabla,text:"Hello World"}
-	var newMessage = new Message({userName:data.userName,groupName:data.groupName,timestamp:data.timestamp,text:data.text});
-	console.log(newMessage);
-	newMessage.save();
-	// TODO [DB] : Store message in DB !
-}
 
-var allChats = {
-  member:{}
-}
-
-function foo (allChats, call) {
-  Group.find({},function(err,allGroups) {
-    // console.log(2)
-    for (var i in allGroups){
-      var groupName = allGroups[i].name
-      call(allChats, groupName);
-    }
-  })
-}
-// var eiei = 
-foo (allChats, function (allChats, groupName) {             //callback
-  // console.log(1)
-  Message.find({groupName:groupName}, function(err,msg){
-    allChats.member[groupName] = msg
-    // console.log(allChats.member)
-  }).then(function(){                                         //Promise
-    // console.log(3)
-    console.log(allChats.member)
-    // return allChats.member
-  })
-})
+// function GetAllChats() {
+//   // TODO [DB] : Get All chats and send back
+//   var allChats = { /* QUERYed */
+//     "Group101" : [
+//       {
+//         username: "user1",
+//         content: "user1messagekubbbbbbbbbbbbbbbbbbbbb",
+//         timeStamp: "3:24"
+//       }
+//     ]
+//   }
+//   return allChats; 
+// }
 
 io.on('connection', function (socket) {
   console.log('a user connected');
@@ -180,17 +144,6 @@ io.on('connection', function (socket) {
     /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
     // see more -- broadcast , but tun: think wa mai na ja work
  
-    var dummyMessage = {        
-      username: "This",
-      content: "This",
-      timeStamp: "1:23"
-    }
-    storeMessage(message); // อาจจะเขียนเป็น new Message แล้ว newMessage.save() ไปเลย ไม่ต้องแยก function เพราะ function ข้างนอกมองไม่เห็น socket
-    socket.emit('updateSendMessages',function(datakub) {
-      /* Send Messages to others in chat */
-      /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
-      // see more -- broadcast , but tun: think wa mai na ja work
-    });
   })
   socket.on('joinGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
       var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
@@ -282,4 +235,6 @@ io.on('connection', function (socket) {
   	io.emit('a user disconnected');
   });
 
-})
+});
+
+//-------------------------
