@@ -77,19 +77,27 @@ function GetGroupInfo(username,socket){
 
 }
 
-// function GetAllChats() {
-//   // TODO [DB] : Get All chats and send back
-//   var allChats = { /* QUERYed */
-//     "Group101" : [
-//       {
-//         username: "user1",
-//         content: "user1messagekubbbbbbbbbbbbbbbbbbbbb",
-//         timeStamp: "3:24"
-//       }
-//     ]
-//   }
-//   return allChats; 
-// }
+function GetAllChatsAllGroup(){
+  var allChats = [];
+  var allChat = [];
+  Group.find({},function(err,allGroups) {
+    allGroups.forEach(function(data){
+      allChat.push(data.name);
+    })
+    let j = 0;
+    allChat.forEach(function(data){
+      Message.find({groupName:data}).sort('timestamp').exec(function(err,msg){
+        allChats[data] = msg;
+        j+=1
+        if(j==allChat.length)
+          console.log(allChats)
+          return allChat;
+      })
+    })
+  })
+}
+
+GetAllChatsAllGroup()
 
 io.on('connection', function (socket) {
   console.log('a user connected');
