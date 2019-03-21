@@ -36,7 +36,6 @@ db.once('open', () => { console.log('DB connected!')});
 //                 timestamp: new Date('December 17, 1995 03:22:00'),
 //                 text: 'another Messageeeeeeeee',
 //             }).save();
-
 // var query = Group.find();
 // query.then(function(group) {console.log(group)});
 //-----------------------------------------------------------------------------
@@ -46,7 +45,7 @@ function userEnter(data) { //data = username "Dongglue"}
     if(err) {console.log(err);}
     // TODO [DB] : Create user if not existed
     if(!users.length) { // user == [] อันนี้เขียนๆไปก่อน ไม่รู้ js เช๊คไง
-      console.log('Create New User na')
+      console.log('>>> Create New User na')
       var newUser = new User({name:data});
       newUser.save();
     }
@@ -61,7 +60,7 @@ function EmitGroupInfo(username,socket){
       groupListkub.push(element.name);
     })
     var isJoinGroupListkub = [];
-    let j = 0;      
+    let k = 0;      
     groupListkub.forEach(function(element){
       JoinedGroupInfo.find({username:username,groupname:element},function(err,data){
         if (data.length == 0) {
@@ -69,10 +68,12 @@ function EmitGroupInfo(username,socket){
         } else {
           isJoinGroupListkub.push(true);
         }
-        j += 1; 
-        if(j==groupListkub.length)
+        k += 1; 
+        if(k==groupListkub.length){
           socket.emit("updateIsJoined",{groupList:groupListkub, isJoinGroupList:isJoinGroupListkub});
+          console.log({groupList:groupListkub, isJoinGroupList:isJoinGroupListkub})
           console.log('emit groupListSomething lew!')
+        }
       })
     })
   })
@@ -110,7 +111,7 @@ io.on('connection', function (socket) {
 
   // After click enter button , data = username 
   socket.on('enter', function (data) {
-    console.log('Received [enter] event!');
+    console.log('>>Received [enter] event!');
     console.log(data);  
     userEnter(data);
     EmitAllChats(socket);
@@ -118,7 +119,7 @@ io.on('connection', function (socket) {
   });
   
   socket.on('sendMessage', function(data){
-    console.log('Received [sendMessage] event!');
+    console.log('>>Received [sendMessage] event!');
     console.log(data);
     //new message 
     var newMessage = new Message(data).save();
@@ -132,31 +133,35 @@ io.on('connection', function (socket) {
  
   })
   socket.on('joinGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
-      console.log('Received [joinGroup] event!');
+      console.log('>>Received [joinGroup] event!');
       console.log(data);
       var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
-      console.log('joinNewGroup');      console.log(joinNewGroup);
-      joinNewGroup.save();
-      // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
-      EmitGroupInfo(data.username,socket);
+      console.log('joinNewGroup');
+      joinNewGroup.save(function(err){
+        if (err) {return err;}
+        EmitGroupInfo(data.username,socket);
+      });
+      
     })
     
   socket.on('leaveGroup', function(data){//data = {username:'dongglue',groupname:'3L'}
-      console.log('Received [leaveGroup] event!');
+      console.log('>>Received [leaveGroup] event!');
       console.log(data);
-      JoinedGroupInfo.deleteOne(data);
-      // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
-      EmitGroupInfo(data.username,socket);
+      JoinedGroupInfo.deleteOne(data,function(err){
+        if (err) {return err;}
+        EmitGroupInfo(data.username,socket);
+      });
+      
     })
   
   socket.on('createGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
-      console.log('Received [createGroup] event!');
+      console.log('>>Received [createGroup] event!');
       console.log(data);
       new Group({name:data.groupname}).save();
       var newGroupJoin = new JoinedGroupInfo({username:data.username,groupname:data.groupname});
       console.log(newGroupJoin);
       newGroupJoin.save();
-      // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
+      
       socket.broadcast.emit('notifyNewGroup')
   })
   socket.on('getUpdateIsjoined',function(data){ // data = username
