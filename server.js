@@ -77,19 +77,6 @@ function GetGroupInfo(username,socket){
 
 }
 
-function GetAllChats() {
-  // TODO [DB] : Get All chats and send back
-  var allChats = { /* QUERYed */
-    "Group101" : [
-      {
-        username: "user1",
-        content: "user1messagekubbbbbbbbbbbbbbbbbbbbb",
-        timeStamp: "3:24"
-      }
-    ]
-  }
-  return allChats; 
-}
 function GetAllChatsAllGroup(){
   var allChats = [];
   var allChat = [];
