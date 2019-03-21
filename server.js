@@ -52,7 +52,7 @@ function userEnter(data) { //data = {username : "Dongglue"}
   })
 }
 
-function GetGroupInfo(username,socket){
+function EmitGroupInfo(username,socket){
 
   var groupListkub = [] ;
   Group.find({},function(err,data){
@@ -77,7 +77,7 @@ function GetGroupInfo(username,socket){
 
 }
 
-function GetAllChatsAllGroup(){
+function EmitAllChats(socket){
   var allChats = [];
   var allChat = [];
   Group.find({},function(err,allGroups) {
@@ -93,19 +93,14 @@ function GetAllChatsAllGroup(){
           return {username:item.userName, content:item.text, timeStamp:item.timestamp.getHours()+":"+item.timestamp.getMinutes() }
         });
         j+=1
-        if(j==allChat.length)
+        if(j==allChat.length){
           console.log(allChats)
+          socket.broadcast.emit('updateAllChats',allChats);
+        }
       })
-      // .then(function(msg){
-      //   // console.log("allchats")
-      //   console.log(allChats)
-      //   return allChats;
-      // })
     })
   })
-  return allChats;
 }
-GetAllChatsAllGroup(); 
 
 io.on('connection', function (socket) {
   console.log('a user connected');
@@ -114,8 +109,8 @@ io.on('connection', function (socket) {
   socket.on('enter', function (data) {
     console.log('Received [enter] event!');
     console.log(data);  
-    // userEnter(data);
-    socket.emit('updateAllChats',GetAllChats());
+    userEnter(data);
+    EmitAllChats(socket);
   });
   
   socket.on('sendMessage', function(data){
@@ -133,28 +128,35 @@ io.on('connection', function (socket) {
  
   })
   socket.on('joinGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
+      console.log('Received [joinGroup] event!');
+      console.log(data);
       var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
       console.log('joinNewGroup');      console.log(joinNewGroup);
       joinNewGroup.save();
       // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
-      GetGroupInfo(data.username,socket);
+      EmitGroupInfo(data.username,socket);
     })
     
   socket.on('leaveGroup', function(data){//data = {username:'dongglue',groupname:'3L'}
+      console.log('Received [leaveGroup] event!');
+      console.log(data);
       JoinedGroupInfo.deleteOne(data);
       // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
-      GetGroupInfo(data.username,socket);
+      EmitGroupInfo(data.username,socket);
     })
   
   socket.on('createGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
-       var newGroupJoin = new JoinedGroupInfo({username:data.username,groupname:data.groupname});
-       console.log(newGroupJoin);
-       newGroupJoin.save();
+      console.log('Received [createGroup] event!');
+      console.log(data);
+      new Group({name:data.groupname}).save();
+      var newGroupJoin = new JoinedGroupInfo({username:data.username,groupname:data.groupname});
+      console.log(newGroupJoin);
+      newGroupJoin.save();
       // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
       socket.broadcast.emit('notifyNewGroup')
   })
   socket.on('getUpdateIsjoined',function(data){ // data = username
-      GetGroupInfo(data,socket);
+      EmitGroupInfo(data,socket);
   })
   socket.on('disconnect', function () {
     io.emit('a user disconnected');
