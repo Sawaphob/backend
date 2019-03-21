@@ -41,12 +41,13 @@ db.once('open', () => { console.log('DB connected!')});
 // query.then(function(group) {console.log(group)});
 //-----------------------------------------------------------------------------
 
-function userEnter(data) { //data = {username : "Dongglue"}
-  User.find({name:data.username},function(err,users){
+function userEnter(data) { //data = username "Dongglue"}
+  User.find({name:data},function(err,users){
     if(err) {console.log(err);}
     // TODO [DB] : Create user if not existed
     if(!users) { // user == [] อันนี้เขียนๆไปก่อน ไม่รู้ js เช๊คไง
-      var newUser = new User({name:data.username});
+      console.log('Create New User na')
+      var newUser = new User({name:data});
       newUser.save();
     }
   })
@@ -71,6 +72,7 @@ function EmitGroupInfo(username,socket){
         j += 1; 
         if(j==groupListkub.length)
           socket.emit("updateIsJoined",{groupList:groupListkub, isJoinGroupList:isJoinGroupListkub});
+          console.log('emit groupListSomething lew!')
       })
     })
   })
@@ -78,7 +80,7 @@ function EmitGroupInfo(username,socket){
 }
 
 function EmitAllChats(socket){
-  var allChats = [];
+  var allChats = {};
   var allChat = [];
   Group.find({},function(err,allGroups) {
     allGroups.forEach(function(data){
@@ -95,7 +97,8 @@ function EmitAllChats(socket){
         j+=1
         if(j==allChat.length){
           console.log(allChats)
-          socket.broadcast.emit('updateAllChats',allChats);
+          socket.emit('updateAllChats',allChats);
+          console.log('emitAllChat lew !')
         }
       })
     })
@@ -111,6 +114,7 @@ io.on('connection', function (socket) {
     console.log(data);  
     userEnter(data);
     EmitAllChats(socket);
+    EmitGroupInfo(data,socket)
   });
   
   socket.on('sendMessage', function(data){
