@@ -40,7 +40,7 @@ db.once('open', () => { console.log('DB connected!')});
 // query.then(function(group) {console.log(group)});
 //-----------------------------------------------------------------------------
 
-function userEnter(data) { //data = username "Dongglue"}
+function userEnter(data,socket) { //data = username "Dongglue"}
   User.find({name:data},function(err,users){
     if(err) {console.log(err);}
     // TODO [DB] : Create user if not existed
@@ -49,6 +49,8 @@ function userEnter(data) { //data = username "Dongglue"}
       var newUser = new User({name:data});
       newUser.save();
     }
+    EmitAllChats(socket);
+    EmitGroupInfo(data,socket)
   })
 }
 
@@ -106,6 +108,32 @@ function EmitAllChats(socket){
   })
 }
 
+function BroadcastAllChats(socket){
+  var allChats = {};
+  var allChat = [];
+  Group.find({},function(err,allGroups) {
+    allGroups.forEach(function(data){
+      allChat.push(data.name);
+    })
+    let j = 0;
+    allChat.forEach(function(data){
+      Message.find({groupName:data}).sort('timestamp').exec(function(err,msg){
+        // console.log("msg")
+        // console.log(msg)
+        allChats[data] = msg.map(function(item,index){
+          return {username:item.userName, content:item.text, timeStamp:item.timestamp.getHours()+":"+item.timestamp.getMinutes() }
+        });
+        j+=1
+        if(j==allChat.length){
+          console.log(allChats)
+          io.emit('updateAllChats',allChats);
+          console.log('BroadcastAllChat lew !')
+        }
+      })
+    })
+  })
+}
+
 io.on('connection', function (socket) {
   console.log('a user connected');
 
@@ -113,20 +141,18 @@ io.on('connection', function (socket) {
   socket.on('enter', function (data) {
     console.log('>>Received [enter] event!');
     console.log(data);  
-    userEnter(data);
-    EmitAllChats(socket);
-    EmitGroupInfo(data,socket)
+    userEnter(data,socket);
   });
   
-  socket.on('sendMessage', function(data){
+  socket.on('sendMessage', function(data){ // data = {userName,GroupName,timestamp,text}
     console.log('>>Received [sendMessage] event!');
     console.log(data);
-    //new message 
-    var newMessage = new Message(data).save();
-    console.log('1')
-    // store message
-    socket.broadcast.emit('updateAllChats',GetAllChats());
-    console.log('2')
+    var newMessage = new Message(data)
+    newMessage.save(function(err){
+      if (err) {return err;}
+      BroadcastAllChats(socket);
+    });
+        // store message
     /* Send Messages to others in chat */
     /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
     // see more -- broadcast , but tun: think wa mai na ja work
@@ -136,7 +162,6 @@ io.on('connection', function (socket) {
       console.log('>>Received [joinGroup] event!');
       console.log(data);
       var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
-      console.log('joinNewGroup');
       joinNewGroup.save(function(err){
         if (err) {return err;}
         EmitGroupInfo(data.username,socket);
@@ -147,7 +172,7 @@ io.on('connection', function (socket) {
   socket.on('leaveGroup', function(data){//data = {username:'dongglue',groupname:'3L'}
       console.log('>>Received [leaveGroup] event!');
       console.log(data);
-      JoinedGroupInfo.deleteOne(data,function(err){
+      JoinedGroupInfo.deleteMany(data,function(err){
         if (err) {return err;}
         EmitGroupInfo(data.username,socket);
       });
@@ -157,14 +182,16 @@ io.on('connection', function (socket) {
   socket.on('createGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
       console.log('>>Received [createGroup] event!');
       console.log(data);
-      new Group({name:data.groupname}).save();
+      new Group({name:data.groupname}).save(function(err){
+        if (err) {return err;} 
+        console.log('notify New Group na !!')       
+        io.emit('notifyNewGroup',"eiei")
+      });
       var newGroupJoin = new JoinedGroupInfo({username:data.username,groupname:data.groupname});
-      console.log(newGroupJoin);
       newGroupJoin.save();
       
-      socket.broadcast.emit('notifyNewGroup')
   })
-  socket.on('getUpdateIsjoined',function(data){ // data = username
+  socket.on('getUpdateIsjoin',function(data){ // data = username
       EmitGroupInfo(data,socket);
   })
   socket.on('disconnect', function () {
