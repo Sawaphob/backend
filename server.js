@@ -14,29 +14,29 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => { console.log('DB connected!')});
 // PlayGround --------------------------------------
-/*
-var aUser = new User({ name: 'user1' });
-var aUser2 = new User({ name: 'user2' });
-var aUser3 = new User({ name: 'user3' });
-var aGroup = new Group({ name: 'Group101' });
-var aGroup2 = new Group({ name: 'Group102' });
-var aGroup3 = new Group({ name: 'Group103' });
-aUser.save();
-aUser2.save();
-aUser3.save();
-aGroup.save();
-aGroup2.save();
-aGroup3.save();
-new GroupJoinedInfo({username: 'user1', groupname: 'Group101'}).save();
-new GroupJoinedInfo({username: 'user1', groupname: 'Group102'}).save();
-new GroupJoinedInfo({username: 'user2', groupname: 'Group101'}).save();
-new GroupJoinedInfo({username: 'user2', groupname: 'Group103'}).save();
-new Message({    username: 'user1',
-                groupname: 'Group101',
-                timestamp: new Date('December 17, 1995 03:24:00'),
-                text: 'user1messagekubbbbbbbbbbbbbbbbbbbbb',
-            }).save();
-*/
+
+// var aUser = new User({ name: 'user1' });
+// var aUser2 = new User({ name: 'user2' });
+// var aUser3 = new User({ name: 'user3' });
+// var aGroup = new Group({ name: 'Group101' });
+// var aGroup2 = new Group({ name: 'Group102' });
+// var aGroup3 = new Group({ name: 'Group103' });
+// aUser.save();
+// aUser2.save();
+// aUser3.save();
+// aGroup.save();
+// aGroup2.save();
+// aGroup3.save();
+// new GroupJoinedInfo({username: 'user1', groupname: 'Group101'}).save();
+// new GroupJoinedInfo({username: 'user1', groupname: 'Group102'}).save();
+// new GroupJoinedInfo({username: 'user2', groupname: 'Group101'}).save();
+// new GroupJoinedInfo({username: 'user2', groupname: 'Group103'}).save();
+// new Message({    userName: 'usertst',
+//                 groupName: 'Group101',
+//                 timestamp: new Date('December 17, 1995 03:22:00'),
+//                 text: 'another Messageeeeeeeee',
+//             }).save();
+
 // var query = Group.find();
 // query.then(function(group) {console.log(group)});
 //-----------------------------------------------------------------------------
@@ -77,23 +77,51 @@ function GetGroupInfo(username,socket){
 
 }
 
-// function GetAllChats() {
-//   // TODO [DB] : Get All chats and send back
-//   var allChats = { /* QUERYed */
-//     "Group101" : [
-//       {
-//         username: "user1",
-//         content: "user1messagekubbbbbbbbbbbbbbbbbbbbb",
-//         timeStamp: "3:24"
-//       }
-//     ]
-//   }
-//   return allChats; 
-// }
+function GetAllChats() {
+  // TODO [DB] : Get All chats and send back
+  var allChats = { /* QUERYed */
+    "Group101" : [
+      {
+        username: "user1",
+        content: "user1messagekubbbbbbbbbbbbbbbbbbbbb",
+        timeStamp: "3:24"
+      }
+    ]
+  }
+  return allChats; 
+}
+function GetAllChatsAllGroup(){
+  var allChats = [];
+  var allChat = [];
+  Group.find({},function(err,allGroups) {
+    allGroups.forEach(function(data){
+      allChat.push(data.name);
+    })
+    let j = 0;
+    allChat.forEach(function(data){
+      Message.find({groupName:data}).sort('timestamp').exec(function(err,msg){
+        // console.log("msg")
+        // console.log(msg)
+        allChats[data] = msg.map(function(item,index){
+          return {username:item.userName, content:item.text, timeStamp:item.timestamp.getHours()+":"+item.timestamp.getMinutes() }
+        });
+        j+=1
+        if(j==allChat.length)
+          console.log(allChats)
+      })
+      // .then(function(msg){
+      //   // console.log("allchats")
+      //   console.log(allChats)
+      //   return allChats;
+      // })
+    })
+  })
+  return allChats;
+}
+GetAllChatsAllGroup(); 
 
 io.on('connection', function (socket) {
   console.log('a user connected');
-  console.log()
 
   // After click enter button , data = username 
   socket.on('enter', function (data) {
@@ -101,15 +129,17 @@ io.on('connection', function (socket) {
     console.log(data);  
     // userEnter(data);
     socket.emit('updateAllChats',GetAllChats());
-    console.log('updateAllChats lew! [from enter]')
   });
   
   socket.on('sendMessage', function(data){
     console.log('Received [sendMessage] event!');
     console.log(data);
     //new message 
+    var newMessage = new Message(data).save();
+    console.log('1')
     // store message
-    
+    socket.broadcast.emit('updateAllChats',GetAllChats());
+    console.log('2')
     /* Send Messages to others in chat */
     /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
     // see more -- broadcast , but tun: think wa mai na ja work
@@ -134,12 +164,14 @@ io.on('connection', function (socket) {
        console.log(newGroupJoin);
        newGroupJoin.save();
       // น่าจะต้อง emit สักอย่างกลับไปให้ front ด้วย [ นึกไม่ออก เดียวค่อยมาดู ] by tun
-      GetGroupInfo(data.username,socket);
-  
+      socket.broadcast.emit('notifyNewGroup')
   })
-    
+  socket.on('getUpdateIsjoined',function(data){ // data = username
+      GetGroupInfo(data,socket);
+  })
   socket.on('disconnect', function () {
     io.emit('a user disconnected');
+    console.log('a user diconnected kub')
   });
 
 });
