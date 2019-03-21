@@ -173,7 +173,6 @@ io.on('connection', function (socket) {
   socket.on('sendMessage', function(data){
     console.log('Received [sendMessage] event!');
     console.log(data);
-<<<<<<< HEAD
     //new message 
     // store message
     
@@ -181,7 +180,6 @@ io.on('connection', function (socket) {
     /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
     // see more -- broadcast , but tun: think wa mai na ja work
  
-=======
     var dummyMessage = {        
       username: "This",
       content: "This",
@@ -193,7 +191,6 @@ io.on('connection', function (socket) {
       /* Message must be TOTAL ORDER something -- maybe store all message in DB and query ALL message in TOTAL ORDER and sendback?  */
       // see more -- broadcast , but tun: think wa mai na ja work
     });
->>>>>>> 2be6d4897ad1f1f7fba4666f544cdc1c066b9262
   })
   socket.on('joinGroup', function(data){ //data = {username:'dongglue',groupname:'3L'}
       var joinNewGroup = new JoinedGroupInfo({username:data.username,groupname:data.groupname})
