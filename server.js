@@ -45,73 +45,35 @@ function GetAllChats(data) { //data = {groupName:"3L"}
     	console.log("Error in query all message in group");
     }
 })
-
-  // var allChats = { /* QUERYed */
-  //   "Group1isBack" : [
-  //     {
-  //       username: "This",
-  //       content: "content = kuy",
-  //       timeStamp: "1:23"
-  //     },
-  //     {
-  //       username: "is",
-  //       content: "is",
-  //       timeStamp: "2:34"
-  //     },
-  //     {
-  //       username: "Group1",
-  //       content: "group1",
-  //       timeStamp: "3.45"
-  //     },
-  //   ],
-  //   "Group2woy" : [
-  //     {
-  //       username: "This",
-  //       content: "This",
-  //       timeStamp: "1:23"
-  //     },
-  //     {
-  //       username: "is",
-  //       content: "is",
-  //       timeStamp: "2:34"
-  //     }
-  //   ]
-  // }
-  // return allChats; 
 }
 
 function storeMessage(data) { //data = {userName:"tstkub",groupName:"3L",timestamp:blabla,text:"Hello World"}
 	var newMessage = new Message({userName:data.userName,groupName:data.groupName,timestamp:data.timestamp,text:data.text});
 	console.log(newMessage);
 	newMessage.save();
-	// TODO [DB] : Store message in DB !
 }
 
-var allChats = {
-  member:{}
-}
-
-function foo (allChats, call) {
+function GetAllChatsAllGroup(){
+  var allChats = [];
+  var allChat = [];
   Group.find({},function(err,allGroups) {
-    // console.log(2)
-    for (var i in allGroups){
-      var groupName = allGroups[i].name
-      call(allChats, groupName);
-    }
+    allGroups.forEach(function(data){
+      allChat.push(data.name);
+    })
+    let j = 0;
+    allChat.forEach(function(data){
+      Message.find({groupName:data}).sort('timestamp').exec(function(err,msg){
+        allChats[data] = msg;
+        j+=1
+        if(j==allChat.length)
+          console.log(allChats)
+      })
+    })
   })
+  return allChats;
 }
-// var eiei = 
-foo (allChats, function (allChats, groupName) {             //callback
-  // console.log(1)
-  Message.find({groupName:groupName}, function(err,msg){
-    allChats.member[groupName] = msg
-    // console.log(allChats.member)
-  }).then(function(){                                         //Promise
-    // console.log(3)
-    console.log(allChats.member)
-    // return allChats.member
-  })
-})
+
+GetAllChatsAllGroup()
 
 io.on('connection', function (socket) {
   console.log('a user connected');
